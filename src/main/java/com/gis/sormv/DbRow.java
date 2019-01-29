@@ -7,16 +7,15 @@ package com.gis.sormv;
  */
 public class DbRow {
 
-        private String name;
-        private String surname;
+    private String name;
+    private String surname;
 
-        public DbRow(String name, String surname) {
-            this.name = name;
-            this.surname = surname;
-        }
+    public DbRow(String name, String surname) {
+        this.name = name;
+        this.surname = surname;
+    }
 
     /**
-     *
      * @param name represents primary key value of table
      */
     public void setName(String name) {
@@ -24,7 +23,6 @@ public class DbRow {
     }
 
     /**
-     *
      * @param surname represents value of second column of database table
      */
     public void setSurname(String surname) {
@@ -36,7 +34,6 @@ public class DbRow {
     }
 
     /**
-     *
      * @return second column value's
      */
     public String getSurname() {
@@ -44,12 +41,11 @@ public class DbRow {
     }
 
     /**
-     *
      * @return id or primary key of table
      */
     @Override
-        public String toString() {
-            return "|"+this.name+"\t|\t"+this.surname+"\t|\t";
-        }
+    public String toString() {
+        return "|" + this.name + "\t|\t" + this.surname + "\t|\t";
+    }
 
 }

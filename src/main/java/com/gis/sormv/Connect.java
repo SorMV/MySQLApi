@@ -25,7 +25,8 @@ public class Connect {
     private String password;
     private DbRow tabHead;
     private final String url = "jdbc:mysql://localhost:3306/";
-    private final String properties = "?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC";
+    private final String properties = "?useLegacyDatetimeCode=false&amp&serverTimezone=UTC";
+        //    "?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC";
 
     /**
      * @param schemaName contains the name of a database schema within which will be searched / modification
@@ -42,7 +43,7 @@ public class Connect {
      * @param tn - the name of the table with which we will work
      */
     public void setTableName(String tn) {
-        this.tableName=tn;
+        this.tableName = tn;
     }
 
     public String getTableName() {
@@ -57,27 +58,26 @@ public class Connect {
 
     private Connection addConnection() throws SQLException {
         myLogger.entering("com.gis.sormv.Connect", "addConnection()");
-            if (!schemaName.isEmpty() && !userName.isEmpty() && !password.isEmpty()) {
-                myLogger.exiting("com.gis.sormv.Connect", "addConnection()", "success");
-                return connection = DriverManager.getConnection(url + schemaName + properties, userName, password);
-            }
-        myLogger.exiting("com.gis.sormv.Connect", "addConnection()", "schemaName="+schemaName+" userName="+userName+" password="+password);
-        return connection=null;
+        if (!schemaName.isEmpty() && !userName.isEmpty() && !password.isEmpty()) {
+            myLogger.exiting("com.gis.sormv.Connect", "addConnection()", "success");
+            return connection = DriverManager.getConnection(url + schemaName + properties, userName, password);
+        }
+        myLogger.exiting("com.gis.sormv.Connect", "addConnection()", "schemaName=" + schemaName + " userName=" + userName + " password=" + password);
+        return connection = null;
     }
 
     private DbRow getTableHead(String tableName) throws SQLException {
         myLogger.entering("com.gis.sormv.Connect", "getTableHead()");
-        if((connection!=null)&&(!connection.isClosed())) {
+        if (addConnection()!=null) {
             DbRow tableHead = new DbRow(null, null);
             Statement head = connection.createStatement();
             ResultSet headrs = head.executeQuery("select `COLUMN_NAME` from `INFORMATION_SCHEMA`.`COLUMNS` where `TABLE_SCHEMA`='" + schemaName + "'and `TABLE_NAME`='" + tableName + "';");
-            if(headrs.next()) tableHead.setName(headrs.getString(1));
-            if(headrs.next()) tableHead.setSurname(headrs.getString(1));
+            if (headrs.next()) tableHead.setName(headrs.getString(1));
+            if (headrs.next()) tableHead.setSurname(headrs.getString(1));
             tabHead = tableHead;
             myLogger.exiting("com.gis.sormv.Connect", "getTableHead()", tableHead.toString());
             return tableHead;
-        }
-        else {
+        } else {
             System.out.println("No connection was found");
             myLogger.exiting("com.gis.sormv.Connect", "getTableHead()", "no connection found!");
             return null;
@@ -85,61 +85,54 @@ public class Connect {
     }
 
     /**
-     *
      * @param tableName the name of the table with which we will work
      * @return head of the table formatted in string
      * @throws SQLException
      */
     public String printTableHead(String tableName) throws SQLException {
-        myLogger.entering("com.gis.sormv.Connect", "printTableHead()");
-        if((connection==null)||(!connection.isClosed())) addConnection();
-            DbRow tableHead = new DbRow(null, null);
-            Statement head = connection.createStatement();
-            ResultSet headrs = head.executeQuery("select `COLUMN_NAME` from `INFORMATION_SCHEMA`.`COLUMNS` where `TABLE_SCHEMA`='" + schemaName + "'and `TABLE_NAME`='" + tableName + "';");
-            if(headrs.next()) tableHead.setName(headrs.getString(1));
-            if(headrs.next()) tableHead.setSurname(headrs.getString(1));
-            tabHead = tableHead;
-            myLogger.exiting("com.gis.sormv.Connect", "printTableHead()", tableHead.toString());
-           return tableHead.toString();
+        String head=getTableHead(tableName).toString();
+        connection.close();
+        return head;
     }
 
     /**
-     *
-     * @param id is a primary key (column name table) of table
+     * @param id    is a primary key (column name table) of table
      * @param table is name of table (if not exists) with which we will work
      * @return DbRow object or null if no Connection found or no rows with which id in database
-     * @see DbRow
      * @throws SQLException
+     * @see DbRow
      */
     public DbRow findById(String id, String table) throws SQLException {
         myLogger.entering("com.gis.sormv.Connect", "findById(String id, String table)", id);
+        DbRow tableHead = getTableHead(table);
         DbRow answerRow;
-        if(this.addConnection()==null) {
+        if (connection == null) {
             System.out.println("No connections found");
             myLogger.exiting("com.gis.sormv.Connect", "findById()", "no connection found!");
             return null;
         }
-            PreparedStatement ps = addConnection().prepareStatement("select * from " + schemaName + "." + table + " where " + getTableHead(table).getName() + "=\"" + id + "\";");
-            ResultSet rs = ps.executeQuery();
-            if (rs.next())
-                answerRow = new DbRow(rs.getString(1), rs.getString(2));
-            else {
-                myLogger.exiting("com.gis.sormv.Connect", "findById()", "has no elements in ResultSet!");
-                return null;
-            }
+        PreparedStatement ps = connection.prepareStatement("select * from " + schemaName + "." + table + " where " + tableHead.getName() + "=\"" + id + "\";");
+        ResultSet rs = ps.executeQuery();
+        if (rs.next())
+            answerRow = new DbRow(rs.getString(1), rs.getString(2));
+        else {
             connection.close();
-            myLogger.exiting("com.gis.sormv.Connect", "findById()", "success");
-            return answerRow;
+            myLogger.exiting("com.gis.sormv.Connect", "findById()", "has no elements in ResultSet!");
+            return null;
+        }
+        connection.close();
+        myLogger.exiting("com.gis.sormv.Connect", "findById()", "success");
+        return answerRow;
     }
 
     /**
      * @see Connect#findById(String, String)
      */
     public DbRow findById(String id) throws SQLException {
-        myLogger.entering("com.gis.sormv.Connect", "findById(String id)",id);
+        myLogger.entering("com.gis.sormv.Connect", "findById(String id)", id);
         DbRow answerRow;
-        if(this.tableName!=null) {
-            answerRow=findById(id, this.tableName);
+        if (this.tableName != null) {
+            answerRow = findById(id, this.tableName);
         } else {
             myLogger.exiting("com.gis.sormv.Connect", "findById(String id)", "table name didn't set!");
             System.out.println("table name didn't set!");
@@ -149,44 +142,42 @@ public class Connect {
     }
 
     /**
-     *
-     * @param table - is name of table (if not exists) with which we will work
-     * @param id is a primary key (column name table) of table by which value being searched
+     * @param table   - is name of table (if not exists) with which we will work
+     * @param id      is a primary key (column name table) of table by which value being searched
      * @param surname is replacement value
      * @throws SQLException
      */
     public void modifyById(String table, String id, String surname) throws SQLException {
         myLogger.entering("com.gis.sormv.Connect", "modifyById(String table, String id, String surname)");
-        if(this.addConnection()==null) {
+        DbRow head = getTableHead(table);
+        if (connection == null) {
             System.out.println("no connections found");
             myLogger.exiting("com.gis.sormv.Connect", "modifyById(String table, String id, String surname)", "no connection found!");
             return;
         }
-        PreparedStatement ps = addConnection().prepareStatement("update "+schemaName+"."+ table+" set "+getTableHead(table).getSurname()+"=? where "+getTableHead(table).getName() + "= ?;");
+        PreparedStatement ps = connection.prepareStatement("update " + schemaName + "." + table + " set " + head.getSurname() + "=? where " + head.getName() + "= ?;");
         ps.setString(1, surname);
         ps.setString(2, id);
         int howMuch = ps.executeUpdate();
         connection.close();
-        myLogger.exiting("com.gis.sormv.Connect", "modifyById(String table, String id, String surname)", "updated "+ howMuch + " rows");
-        System.out.println("updated "+ howMuch + " rows");
+        myLogger.exiting("com.gis.sormv.Connect", "modifyById(String table, String id, String surname)", "updated " + howMuch + " rows");
+        System.out.println("updated " + howMuch + " rows");
     }
 
     /**
-     *
      * @see Connect#modifyById(String, String, String)
      */
     public void modifyById(String id, String surname) throws SQLException {
         myLogger.entering("com.gis.sormv.Connect", "modifyById(String id, String surname)");
-        if(this.tableName!=null) {
+        if (this.tableName != null) {
             modifyById(this.tableName, id, surname);
         } else {
-            myLogger.exiting("com.gis.sormv.Connect", "modifyById(String id, String surname)","table name didn't set!" );
+            myLogger.exiting("com.gis.sormv.Connect", "modifyById(String id, String surname)", "table name didn't set!");
             System.out.println("table name didn't set!");
         }
     }
 
     /**
-     *
      * sample program using this api
      */
     public static void main(String[] args) {
@@ -202,10 +193,11 @@ public class Connect {
             System.out.println(cn.printTableHead("acctable"));
             System.out.println(cn.findById("Mikhail", "acctable"));
             cn.modifyById("acctable", "Mikhail", "Sorokin");
+            cn.setTableName("acctable");
+            System.out.println(cn.findById("Mikhail"));
+            cn.modifyById("Mikhail", "Sorokin");
         } catch (SQLException e) {
             Connect.myLogger.log(Level.WARNING, e.getMessage(), e);
         }
-
     }
-
 }

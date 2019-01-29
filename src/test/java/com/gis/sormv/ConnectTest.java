@@ -1,27 +1,29 @@
 package com.gis.sormv;
 
 import org.junit.Assert;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.*;
 
-import static org.junit.jupiter.api.Assertions.*;
 
-class ConnectTest {
+
+
+public class ConnectTest {
 
     Connect cn;
+
     //= new Connect("jdbc:mysql://localhost:3306/account?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC", "root", "кщще");
     @BeforeEach
     void setUp() {
         cn = new Connect("jdbc:mysql://localhost:3306/account?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC", "root", "кщще");
     }
 
+
     @Test
     void setSchemaName() {
         cn.setSchemaName("SchemaName");
-        assertEquals("SchemaName", cn.getSchemaName());
+        Assert.assertEquals("SchemaName", cn.getSchemaName());
     }
 
     @Test
@@ -32,7 +34,7 @@ class ConnectTest {
 
     @Test
     void printTableHead() throws SQLException {
-        Connection con =DriverManager.getConnection("jdbc:mysql://localhost:3306/account?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC", "root", "кщще");
+        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/account?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC", "root", "кщще");
         Assert.assertNotNull(con);
         Assert.assertTrue(con.isValid(0));
         Statement head = con.createStatement();
@@ -46,7 +48,7 @@ class ConnectTest {
 
     @Test
     void findById() throws SQLException {
-        Connection con =DriverManager.getConnection("jdbc:mysql://localhost:3306/account?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC", "root", "кщще");
+        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/account?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC", "root", "кщще");
         Assert.assertNotNull(con);
         Assert.assertTrue(con.isValid(0));
         PreparedStatement ps = con.prepareStatement("select * from account.acctable;");
@@ -61,13 +63,13 @@ class ConnectTest {
 
     @Test
     void modifyById() throws SQLException {
-        Connection con =DriverManager.getConnection("jdbc:mysql://localhost:3306/account?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC", "root", "кщще");
+        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/account?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC", "root", "кщще");
         Assert.assertNotNull(con);
         Assert.assertTrue(con.isValid(0));
         PreparedStatement ps = con.prepareStatement("update account.acctable set surname=? where name= ?;");
         ps.setString(1, "surname");
         ps.setString(2, "id");
-        Assert.assertEquals(0,ps.executeUpdate());
+        Assert.assertEquals(0, ps.executeUpdate());
         con.close();
     }
 

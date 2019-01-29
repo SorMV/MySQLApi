@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DbRowTest {
+public class DbRowTest {
 
-    private  DbRow row = new DbRow("name", "surname");
+    private DbRow row = new DbRow("name", "surname");
 
     @Test
     void getName() {
