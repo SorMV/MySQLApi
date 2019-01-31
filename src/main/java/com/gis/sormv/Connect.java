@@ -26,7 +26,7 @@ public class Connect {
     private DbRow tabHead;
     private final String url = "jdbc:mysql://localhost:3306/";
     private final String properties = "?useLegacyDatetimeCode=false&amp&serverTimezone=UTC";
-        //    "?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC";
+    //    "?verifyServerCertificate=false&useSSL=false&requireSSL=false&useLegacyDatetimeCode=false&amp&serverTimezone=UTC";
 
     /**
      * @param schemaName contains the name of a database schema within which will be searched / modification
@@ -56,7 +56,19 @@ public class Connect {
         this.password = password;
     }
 
-    private Connection addConnection() throws SQLException {
+    public Connect() {
+
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Connection addConnection() throws SQLException {
         myLogger.entering("com.gis.sormv.Connect", "addConnection()");
         if (!schemaName.isEmpty() && !userName.isEmpty() && !password.isEmpty()) {
             myLogger.exiting("com.gis.sormv.Connect", "addConnection()", "success");
@@ -66,9 +78,21 @@ public class Connect {
         return connection = null;
     }
 
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void closeConnection() throws SQLException {
+        if (connection != null && connection.isValid(0))
+            connection.close();
+    }
+
     private DbRow getTableHead(String tableName) throws SQLException {
         myLogger.entering("com.gis.sormv.Connect", "getTableHead()");
-        if (addConnection()!=null) {
+
+        //   if (addConnection()!=null) {
+        if (connection != null && connection.isValid(0)) {
             DbRow tableHead = new DbRow(null, null);
             Statement head = connection.createStatement();
             ResultSet headrs = head.executeQuery("select `COLUMN_NAME` from `INFORMATION_SCHEMA`.`COLUMNS` where `TABLE_SCHEMA`='" + schemaName + "'and `TABLE_NAME`='" + tableName + "';");
@@ -79,6 +103,7 @@ public class Connect {
             return tableHead;
         } else {
             System.out.println("No connection was found");
+            tabHead = null;
             myLogger.exiting("com.gis.sormv.Connect", "getTableHead()", "no connection found!");
             return null;
         }
@@ -90,8 +115,12 @@ public class Connect {
      * @throws SQLException
      */
     public String printTableHead(String tableName) throws SQLException {
-        String head=getTableHead(tableName).toString();
-        connection.close();
+        String head;
+        tabHead = getTableHead(tableName);
+        if (tabHead != null)
+            head = tabHead.toString();
+        else head = null;
+        //   connection.close();
         return head;
     }
 
@@ -106,7 +135,7 @@ public class Connect {
         myLogger.entering("com.gis.sormv.Connect", "findById(String id, String table)", id);
         DbRow tableHead = getTableHead(table);
         DbRow answerRow;
-        if (connection == null) {
+        if (connection == null || !connection.isValid(0)) {
             System.out.println("No connections found");
             myLogger.exiting("com.gis.sormv.Connect", "findById()", "no connection found!");
             return null;
@@ -116,11 +145,11 @@ public class Connect {
         if (rs.next())
             answerRow = new DbRow(rs.getString(1), rs.getString(2));
         else {
-            connection.close();
+            //   connection.close();
             myLogger.exiting("com.gis.sormv.Connect", "findById()", "has no elements in ResultSet!");
             return null;
         }
-        connection.close();
+        // connection.close();
         myLogger.exiting("com.gis.sormv.Connect", "findById()", "success");
         return answerRow;
     }
@@ -159,7 +188,7 @@ public class Connect {
         ps.setString(1, surname);
         ps.setString(2, id);
         int howMuch = ps.executeUpdate();
-        connection.close();
+        //  connection.close();
         myLogger.exiting("com.gis.sormv.Connect", "modifyById(String table, String id, String surname)", "updated " + howMuch + " rows");
         System.out.println("updated " + howMuch + " rows");
     }
@@ -190,12 +219,14 @@ public class Connect {
         }
         Connect cn = new Connect("account", "root", "кщще");
         try {
+            cn.addConnection();
             System.out.println(cn.printTableHead("acctable"));
             System.out.println(cn.findById("Mikhail", "acctable"));
             cn.modifyById("acctable", "Mikhail", "Sorokin");
             cn.setTableName("acctable");
             System.out.println(cn.findById("Mikhail"));
             cn.modifyById("Mikhail", "Sorokin");
+            cn.closeConnection();
         } catch (SQLException e) {
             Connect.myLogger.log(Level.WARNING, e.getMessage(), e);
         }
